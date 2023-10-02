@@ -6,7 +6,8 @@
 # should never be used in a production environment or even for home use.
 # updated for speed and readability code-using tips from chat gpt 3.4 
 
-# TODO test and modify where needed. 
+# TODO test and modify where needed.  #def issuses this will allow for duplicate PWs. I should have forked this
+# before letting GPT re write the code... good learning experiment here though
 
 import multiprocessing
 from random import choice
