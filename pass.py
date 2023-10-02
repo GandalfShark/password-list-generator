@@ -4,44 +4,67 @@
 
 # for illustration/educational use ONLY! These passwords should NOT be considered secure passwords and
 # should never be used in a production environment or even for home use.
+# updated for speed and readability code-using tips from chat gpt 3.4 
 
+# TODO test and modify where needed. 
+
+import multiprocessing
 from random import choice
-word_list = []
+import string
 
-#character_set = """\"1234567890-=!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}asdfghjkl;'ASDFGHJKL:'zxcvbnm,./ZXCVBNM<>?"""
-# full set of chars from every key and shift + key
+CHARACTER_SET = string.digits + string.ascii_letters + string.punctuation
+PASSWORD_LENGTHS = range(8, 11)
+MAX_PASSWORDS = 20000
 
-character_set ="1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM?!@#$%*&_.'\""
-# small version with more likely chars and dis-allowance of dangerous chars like < , -, / and ;
-total_pass = (len(character_set))**10 + (len(character_set))**9 + (len(character_set))**8
+def generate_password(length):
+    return ''.join(choice(CHARACTER_SET) for _ in range(length))
 
+def generate_variations(password):
+    variations = [
+        password,
+        password.swapcase(),
+        password.upper(),
+        password.lower()
+    ]
+    return variations
 
-def eight_to_ten_characters(chars, current_list):
-    word = ''
-    c = chars
-    for i in chars:
-        word = word + (choice(c))
-        if len(word) <= 10 and len(word) > 7 and word not in current_list:
-            return word
-            # will first return all possible 8 char combinations, then 9, then 10
+def generate_passwords(worker_id, num_passwords, word_list):
+    while len(word_list) < MAX_PASSWORDS:
+        password_length = choice(PASSWORD_LENGTHS)
+        new_password = generate_password(password_length)
+        
+        if new_password not in word_list:
+            word_list.extend(generate_variations(new_password))
+    
+    print(f"Worker {worker_id} finished generating passwords.")
 
-def add_the_word(new, w_list):
-    if new not in w_list:
-        word_list.append(new)
+def save_to_file(file_name, data):
+    with open(file_name, 'w') as file:
+        for item in data:
+            file.write(f"{item}\n")
 
-while len(word_list) <= 20000:
-    # test version to generate 20000 "secure" 8 to 10 character passwords
-    new_word = (eight_to_ten_characters(character_set, word_list))
-    add_the_word(new_word, word_list)
-    new_word = new_word.swapcase()
-    add_the_word(new_word, word_list)
-    new_word = new_word.upper()
-    add_the_word(new_word, word_list)
-    new_word = new_word.lower()
-    add_the_word(new_word, word_list)
-    # NGL I wrote this mostly to practice string methods.
-    # example output: 'h6?%9xnO', 'H6?%9XNo', 'H6?%9XNO', 'h6?%9xno'
+if __name__ == "__main__":
+    manager = multiprocessing.Manager()
+    word_list = manager.list()  # Use a multiprocessing-safe list
+    # With this modification, the word_list is a multiprocessing-safe list, and 
+    # each process can safely add unique passwords and variations without worrying about duplicates.
+    
+    num_processes = 4  # Adjust the number of processes as needed
+    
+    processes = []
+    for i in range(num_processes):
+        process = multiprocessing.Process(target=generate_passwords, args=(i, num_processes, word_list))
+        process.start()
+        processes.append(process)
+    
+    for process in processes:
+        process.join()
+    
+    print("All workers finished generating passwords.")
+    
+    output_file = "passwords.txt"
+    save_to_file(output_file, word_list)
+    
+    print(f"Results saved to {output_file}")
+    print(f"Total possible passwords without the 20k restriction: {len(CHARACTER_SET) ** max(PASSWORD_LENGTHS)}")
 
-print(word_list)
-#  note that this has a low chance of generating actual words with the 20k restraint in place
-print(f'\nwithout the 20k restriction this would return {total_pass} passwords')
