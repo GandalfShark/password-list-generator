@@ -65,7 +65,6 @@ if __name__ == "__main__":
     word_list = manager.list()
 
     lock = multiprocessing.Lock()
-    # TODO test with diff numbers of processes
     word_set = set()
     processes = []
     for i in range(TOTAL_PROCESSES):
@@ -85,7 +84,7 @@ if __name__ == "__main__":
     end_time = time()
     print(f'Program took {(end_time - start_time):.2f} seconds with {TOTAL_PROCESSES} processes.')
 
-    # adjusting the output to create files each tim it runs
+    # adjusting the output to create files each time it runs
     file_title = input('What do you want to call your password_list?')
     output_file = 'passwords_' + file_title + '.txt'
     save_to_file(output_file, word_list)
